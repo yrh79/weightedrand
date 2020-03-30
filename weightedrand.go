@@ -49,3 +49,8 @@ func (chs Chooser) Pick() interface{} {
 	i := sort.SearchInts(chs.totals, r)
 	return chs.data[i].Item
 }
+
+// Len ...
+func (chs Chooser) Len() int {
+	return len(chs.data)
+}
