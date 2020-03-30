@@ -11,6 +11,7 @@
 package weightedrand
 
 import (
+	"errors"
 	"math/rand"
 	"sort"
 )
@@ -32,11 +33,12 @@ type Chooser struct {
 
 // NewChooser initializes a new Chooser consisting of the possible Choices.
 func NewChooser(cs ...Choice) Chooser {
+	totals := make([]int, len(cs))
+
 	if len(cs) > 0 {
 		sort.Slice(cs, func(i, j int) bool {
 			return cs[i].Weight < cs[j].Weight
 		})
-		totals := make([]int, len(cs))
 		runningTotal := 0
 		for i, c := range cs {
 			runningTotal += int(c.Weight)
@@ -44,7 +46,7 @@ func NewChooser(cs ...Choice) Chooser {
 		}
 		return Chooser{data: cs, totals: totals, max: runningTotal, valid: true}
 	} else {
-		return Chooser{data: cs, totals: 0, max: 0, valid: false}
+		return Chooser{data: cs, totals: totals, max: 0, valid: false}
 	}
 }
 
@@ -55,7 +57,7 @@ func (chs Chooser) Pick() (interface{}, error) {
 	}
 	r := rand.Intn(chs.max) + 1
 	i := sort.SearchInts(chs.totals, r)
-	return chs.data[i].Item
+	return chs.data[i].Item, nil
 }
 
 // Len ...
