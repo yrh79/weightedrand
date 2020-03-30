@@ -27,24 +27,32 @@ type Chooser struct {
 	data   []Choice
 	totals []int
 	max    int
+	valid  bool
 }
 
 // NewChooser initializes a new Chooser consisting of the possible Choices.
 func NewChooser(cs ...Choice) Chooser {
-	sort.Slice(cs, func(i, j int) bool {
-		return cs[i].Weight < cs[j].Weight
-	})
-	totals := make([]int, len(cs))
-	runningTotal := 0
-	for i, c := range cs {
-		runningTotal += int(c.Weight)
-		totals[i] = runningTotal
+	if len(cs) > 0 {
+		sort.Slice(cs, func(i, j int) bool {
+			return cs[i].Weight < cs[j].Weight
+		})
+		totals := make([]int, len(cs))
+		runningTotal := 0
+		for i, c := range cs {
+			runningTotal += int(c.Weight)
+			totals[i] = runningTotal
+		}
+		return Chooser{data: cs, totals: totals, max: runningTotal, valid: true}
+	} else {
+		return Chooser{data: cs, totals: 0, max: 0, valid: false}
 	}
-	return Chooser{data: cs, totals: totals, max: runningTotal}
 }
 
 // Pick returns a single weighted random Choice.Item from the Chooser.
-func (chs Chooser) Pick() interface{} {
+func (chs Chooser) Pick() (interface{}, error) {
+	if !chs.valid {
+		return nil, errors.New("error: no choices")
+	}
 	r := rand.Intn(chs.max) + 1
 	i := sort.SearchInts(chs.totals, r)
 	return chs.data[i].Item
